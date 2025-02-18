@@ -81,9 +81,9 @@ app.delete("/api/v1/content",contentmiddleware,async(req,res)=>{
     //@ts-ignore
     userId:req.userId
    })
-   res.json({
+   res.json(
     "content deleted"
-   })
+   )
 
     
 }) 
