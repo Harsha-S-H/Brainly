@@ -17,3 +17,11 @@ mongoose.connect("mongodb+srv://shharsha40:harsha123@dev.p91px.mongodb.net/brain
   })
 
   export const ContentModel=mongoose.model("Content",ContentSchema)
+
+   const LinkSchema=new Schema({
+    hash:{ type: String, required: true },
+    userId:{type:mongoose.Types.ObjectId,ref:'User',required:true}
+    
+  })
+  
+export const LinkModel=mongoose.model("Link",LinkSchema);

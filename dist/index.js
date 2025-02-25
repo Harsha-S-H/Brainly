@@ -18,6 +18,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const middleware_1 = require("./middleware");
 const db_1 = require("./db");
 const config_1 = require("./config");
+const utils_1 = require("./utils");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.post("/api/v1/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -79,11 +80,76 @@ app.get("/api/v1/content", middleware_1.contentmiddleware, (req, res) => __await
 }));
 app.delete("/api/v1/content", middleware_1.contentmiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
+    const contentId = req.body.contentId;
+    yield db_1.ContentModel.deleteMany({
+        contentId,
+        //@ts-ignore
+        userId: req.userId
+    });
+    res.json("content deleted");
 }));
-app.post(" /api/v1/brain/share", (req, res) => {
-});
-app.get(" /api/v1/brain/:shareLink", (req, res) => {
-});
+app.post("/api/v1/brain/share", middleware_1.contentmiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const share = req.body.share;
+    if (share) {
+        const existinglink = yield db_1.LinkModel.findOne({
+            //@ts-ignore
+            userId: req.userId
+        });
+        if (existinglink) {
+            res.json({
+                hash: existinglink.hash
+            });
+            return;
+        }
+        const hash = (0, utils_1.random)(10);
+        yield db_1.LinkModel.create({
+            //@ts-ignore
+            userId: req.userId,
+            hash: hash
+        });
+        res.json({
+            hash
+        });
+    }
+    else {
+        yield db_1.LinkModel.deleteOne({
+            //@ts-ignore
+            userId: req.userId
+        });
+        res.json({
+            message: "Removed hash"
+        });
+    }
+}));
+app.get("/api/v1/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const hash = req.params.shareLink;
+    const link = yield db_1.LinkModel.findOne({
+        hash
+    });
+    if (!link) {
+        res.status(411).json({
+            message: "incorrect input"
+        });
+        return;
+    }
+    const content = yield db_1.ContentModel.find({
+        userId: link.userId
+    });
+    const username = yield db_1.UserModel.findOne({
+        //@ts-ignore
+        _id: link.userId
+    });
+    if (!username) {
+        res.status(411).json({
+            message: "username doesnot exist"
+        });
+        return;
+    }
+    res.json({
+        username: username.username,
+        content: content
+    });
+}));
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         yield mongoose_1.default.connect("mongodb+srv://shharsha40:harsha123@dev.p91px.mongodb.net/brainly");
